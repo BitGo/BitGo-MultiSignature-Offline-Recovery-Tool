@@ -11,31 +11,6 @@
 */
 
 var TX = new function () {
-
-    var inputs = [];
-    var outputs = [];
-    var eckeys = null;
-    var balance = 0;
-    var redemption_script = null;
-
-    this.init = function(_eckeys, _redemption_script) {
-        outputs = [];
-        eckeys = _eckeys;
-        redemption_script = _redemption_script;
-    }
-
-    this.addOutput = function(addr, fval) {
-        outputs.push({address: addr, value: fval});
-    }
-
-    this.removeOutputs = function() {
-        outputs = [];
-    }
-
-    this.getBalance = function() {
-        return balance;
-    }
-
     this.getFee = function(sendTx) {
         var out = BigInteger.ZERO;
         for (var i in outputs) {
@@ -44,74 +19,6 @@ var TX = new function () {
             out = out.add(value);
         }
         return balance.subtract(out);
-    }
-
-    this.parseInputs = function(text, address) {
-        try {
-            var res = tx_parseBCI(text, address);
-        } catch(err) {
-            var res = parseTxs(text, address);
-        }
-
-        balance = res.balance;
-        inputs = res.unspenttxs;
-    }
-
-    this.rebuild = function(sendTx, resign) {
-        if (!resign)
-          sendTx = new Bitcoin.Transaction();
-
-        var selectedOuts = [];
-        for (var hash in inputs) {
-            if (!inputs.hasOwnProperty(hash))
-                continue;
-            for (var index in inputs[hash]) {
-                if (!inputs[hash].hasOwnProperty(index))
-                    continue;
-                var script = parseScript(inputs[hash][index].script);
-                var b64hash = Crypto.util.bytesToBase64(Crypto.util.hexToBytes(hash));
-                var txin = new Bitcoin.TransactionIn({outpoint: {hash: b64hash, index: index}, script: script, sequence: 4294967295});
-                selectedOuts.push(txin);
-                if (!resign)
-                  sendTx.addInput(txin);
-            }
-        }
-
-        for (var i in outputs) {
-            var address = outputs[i].address;
-            var fval = outputs[i].value;
-            var value = new BigInteger('' + Math.round(fval * 1e8), 10);
-            if (!resign)
-              sendTx.addOutput(new Bitcoin.Address(address), value);
-        }
-
-        var hashType = 1; // SIGHASH_ALL
-        for (var i = 0; i < sendTx.ins.length; i++) {
-            var connectedScript = selectedOuts[i].script;
-            var hash = sendTx.hashTransactionForSignature(redemption_script, i, hashType);
-            var script = new Bitcoin.Script();
-
-            // No idea why this remains in Bitcoin code...
-            script.writeOp(0);
-
-            for (var j = 0; j < eckeys.length; j++ ) {
-                var signature = eckeys[j].sign(hash);
-                signature.push(parseInt(hashType, 10));
-                script.writeBytes(signature);
-            }
-
-            script.writeBytes(redemption_script.buffer);
-            sendTx.ins[i].script = script;
-        }
-        return sendTx;
-    };
-
-    this.construct = function() {
-      return this.rebuild(null, false);
-    }
-
-    this.resign = function(sendTx) {
-      return this.rebuild(sendTx, true);
     }
 
     function uint(f, size) {
@@ -329,7 +236,7 @@ function tx_parseBCI(data, address) {
     delete unspenttxs;
     var unspenttxs = {};
     var balance = BigInteger.ZERO;
-    for (var i in txs) {
+    for (var i = 0 ; i < txs.length ; i++) {
         var o = txs[i];
         var lilendHash = o.tx_hash;
 
@@ -454,7 +361,7 @@ function btcstr2bignum(btc) {
 function parseScript(script) {
     var newScript = new Bitcoin.Script();
     var s = script.split(" ");
-    for (var i in s) {
+    for (var i = 0 ; i < s.length ; i++) {
         if (Bitcoin.Opcode.map.hasOwnProperty(s[i])){
             newScript.writeOp(Bitcoin.Opcode.map[s[i]]);
         } else {
@@ -466,18 +373,14 @@ function parseScript(script) {
 // --->8---
 
 // Some cross-domain magic (to bypass Access-Control-Allow-Origin)
-function tx_fetch(url, onSuccess, onError, postdata) {
-    var useYQL = true;
-
-    if (useYQL) {
-        var q = 'select * from html where url="'+url+'"';
-        if (postdata) {
-            q = 'use "http://brainwallet.github.com/js/htmlpost.xml" as htmlpost; ';
-            q += 'select * from htmlpost where url="' + url + '" ';
-            q += 'and postdata="' + postdata + '" and xpath="//p"';
-        }
-        url = 'https://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent(q);
+function tx_fetch_yql(url, onSuccess, onError, postdata) {
+    var q = 'select * from html where url="'+url+'"';
+    if (postdata) {
+        q = 'use "http://brainwallet.github.com/js/htmlpost.xml" as htmlpost; ';
+        q += 'select * from htmlpost where url="' + url + '" ';
+        q += 'and postdata="' + postdata + '" and xpath="//p"';
     }
+    url = 'https://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent(q);
 
     $.ajax({
         url: url,
@@ -487,6 +390,21 @@ function tx_fetch(url, onSuccess, onError, postdata) {
         error:function (xhr, opt, err) {
             if (onError)
                 onError(err);
+        }
+    });
+}
+
+function tx_fetch(url, onSuccess, onError, postdata) {
+    $.ajax({
+        url: url,
+        dataType: 'text',
+        data: postdata,
+        success: function(res) {
+            onSuccess(res);
+        },
+        error:function (xhr, opt, err) {
+            if (onError)
+                onError(xhr.responseText, err);
         }
     });
 }

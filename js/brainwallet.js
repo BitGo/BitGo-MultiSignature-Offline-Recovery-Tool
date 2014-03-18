@@ -16,6 +16,8 @@
     var gen_ps_reset = false;
     var TIMEOUT = 600;
     var timeout = null;
+    var theTx = new Bitcoin.Transaction();
+    var balance = 0;
 
     var coin = "btc_main";
 
@@ -431,7 +433,7 @@
         var chain_index = parseInt($("#chain_index").val(), 10);
         if( isNaN(chain_index) || chain_index < 0 || chain_index > 0x7fffffff ) return;
 
-        var path_prefix = 'm/0/0/';
+        var path_prefix = 'm/';
 
         if( keyset.key1 !== null ) {
             var d = keyset.key1.derive(path_prefix + chain_index);
@@ -981,8 +983,63 @@
         timeout = setTimeout(txRebuild, TIMEOUT);
     }
 
+    function txOnChangeAccount() {
+      var $selected = $('#txAccounts').val();
+      var $details = $('#txShowBCI');
+      if ($selected != '') {
+        var json = $("#txRecoveryJson").val().trim();
+        var recover = JSON.parse(json);
+        var item = recover.addresses[$selected];
+        $("#txRedemptionScript").val(item.public.redeemScript);
+        $("#txChainCode").val(item.chain ? item.chain.code : '');
+        txOnChangeRedemptionScript();
+        $details.fadeIn();
+        txGetUnspent();
+      } else {
+        $("#txRedemptionScript").val('');
+        $("#txChainCode").val('');
+        txOnChangeRedemptionScript();
+        $details.fadeOut();
+      }
+    }
+
+    function txOnChangeRecoveryJson() {
+      var json = $("#txRecoveryJson").val().trim();
+      var $accounts = $('#txAccounts');
+      var $details = $('#txShowBCI');
+      if (json[0] == '{') {
+        var recover = JSON.parse(json);
+        $accounts.html('');
+        $accounts.append($("<option />").val('').text('Select an account / gift to recover'));
+        $.each(recover.addresses, function(address) {
+          var item = recover.addresses[address];
+          var title = item.label;
+          if (item.chain) {
+            title = title + " from " + recover.addresses[item.chain.parent].label;
+          }
+          title = title + " - " + address;
+          $accounts.append($("<option />").val(address).text(title));
+        });
+        $accounts.show('fold');
+        $details.hide();
+      }
+      else {
+        $("#txRedemptionScript").val(json);
+        txOnChangeRedemptionScript();
+        $accounts.hide();
+        $details.show();
+      }
+    }
+
     function txOnChangeRedemptionScript() {
-        var bytes = Crypto.util.hexToBytes($('#txRedemptionScript').val());
+        var script_hex = $('#txRedemptionScript').val().trim();
+        if (script_hex == '') {
+          $("#txAddr").val('');
+          $("#txSec3_group").addClass('hidden');
+          return;
+        }
+
+        var bytes = Crypto.util.hexToBytes(script_hex);
         var redemption_script = new Bitcoin.Script(bytes);
 
         // Hash the script to produce the bitcoin address:
@@ -1002,7 +1059,8 @@
         $("#txSec2_group").removeClass('hidden').addClass((m < 2) ? 'hidden' : '');
         $("#txSec3_group").removeClass('hidden').addClass((m < 3) ? 'hidden' : '');
 
-        txRebuild();
+        if ($('#txUnspent').val() != '')
+            txRebuild();
     }
 
     function txSetUnspent(text) {
@@ -1010,9 +1068,8 @@
         txUnspent = JSON.stringify(r, null, 4);
         $('#txUnspent').val(txUnspent);
         var address = $('#txAddr').val();
-        TX.parseInputs(txUnspent, address);
-        var value = TX.getBalance();
-        var fval = Bitcoin.Util.formatValue(value);
+        parseInputs(txUnspent, address);
+        var fval = Bitcoin.Util.formatValue(balance);
         var fee = parseFloat($('#txFee').val());
         $('#txBalance').val(fval);
         var value = Math.floor((fval-fee)*1e8)/1e8;
@@ -1030,24 +1087,41 @@
     }
 
     function txParseUnspent(text) {
-        if (text == '')
-            alert('No data');
+        $('#txLoading').hide();
         txSetUnspent(text);
     }
 
     function txGetUnspent() {
         var addr = $('#txAddr').val();
 
-        var url = (txType == 'txBCI') ? 'http://blockchain.info/unspent?address=' + addr :
+        var url = (txType == 'txBCI') ? 'https://blockchain.info/unspent?cors=true&address=' + addr :
             'http://blockexplorer.com/q/mytransactions/' + addr;
 
-        url = prompt('Press OK to download transaction history:', url);
+        //url = prompt('Press OK to download transaction history:', url);
         if (url != null && url != "") {
             $('#txUnspent').val('');
-            tx_fetch(url, txParseUnspent);
+            $('#txLoading').show();
+            if (txType == 'txBCI')
+              tx_fetch(url, txParseUnspent, function(response, status) {
+                if (response == 'No free outputs to spend') {
+                  alert("Balance is zero");
+                } else {
+                  alert("Error: " + status + " : " + response);
+                }
+                txParseUnspent('[]');
+              });
+            else
+              tx_fetch_yql(url, txParseUnspent);
         } else {
           txSetUnspent($('#txUnspent').val());
         }
+    }
+
+    function txShowBCI() {
+        var addr = $('#txAddr').val();
+
+        var url = 'https://blockchain.info/address/' + addr;
+        window.open(url, '_blank');
     }
 
     function txOnChangeJSON() {
@@ -1099,7 +1173,16 @@
     }
 
     function txSent(text) {
-        alert(text ? text : 'No response!');
+      if (text) {
+        result = $(text).find('result').text();
+        if (result == 0) {
+          alert('Error: ' + $(text).find('response').text());
+        } else {
+          alert('Success!  Transaction ID: ' + $(text).find('txid').text());
+        }
+      } else {
+        alert('No response!');
+      }
     }
 
     function txSend() {
@@ -1116,8 +1199,18 @@
         postdata = 'tx=' + tx;
         url = prompt(r + 'Press OK to send transaction to:', url);
         if (url != null && url != "") {
-            tx_fetch(url, txSent, txSent, postdata);
+            tx_fetch_yql(url, txSent, txSent, postdata);
         }
+        return false;
+    }
+
+    function txSendCoinbin() {
+        var r = '';
+        var tx = $('#txHex').val();
+
+        url = 'https://coinb.in/api/';
+        postdata = 'rawtx=' + tx + '&uid=1&key=12345678901234567890123456789012&setmodule=bitcoin&request=sendrawtransaction&cors=true';
+        tx_fetch(url, txSent, txSent, postdata);
         return false;
     }
 
@@ -1139,6 +1232,11 @@
 
         var eckey = new Bitcoin.ECKey(payload);
         eckey.setCompressed(compressed);
+        var chainCode = $('#txChainCode').val();
+        if (chainCode != '') {
+          var newkey = Bitcoin.ECKey.createECKeyFromChain(eckey.priv.toByteArrayUnsigned(), Crypto.util.hexToBytes(chainCode));
+          return newkey;
+        }
         return eckey;
     }
 
@@ -1208,30 +1306,33 @@
 
         var addr = $('#txAddr').val();
         var unspent = $('#txUnspent').val();
-        var balance = parseFloat($('#txBalance').val());
         var fee = parseFloat('0'+$('#txFee').val());
 
-        TX.init(eckeys, redemption_script);
+        parseInputs(unspent, addr);
+
+        theTx.clearOutputs();
 
         var fval = 0;
         var o = txGetOutputs();
-        for (i in o) {
-            TX.addOutput(o[i].dest, o[i].fval);
-            fval += o[i].fval;
+        for (var i = 0 ; i < o.length ; i++) {
+            if (o[i].dest != "") {
+                fval += o[i].fval;
+                var value = new BigInteger('' + Math.round(o[0].fval * 1e8), 10);
+                theTx.addOutput(new Bitcoin.Address(o[0].dest), value);
+            }
         }
 
         // send change back or it will be sent as fee
-        // Current BitcoinJS won't let us return the change to ourselves.
-        // It throwns an exception in Bitcoin.Address.decodeString complaining about "Version 5" addresses.
-        // if (balance > fval + fee) {
-        //     var change = balance - fval - fee;
-        //     TX.addOutput(addr, change);
-        // }
+        var change = Bitcoin.Util.formatValue(balance) - fval - fee;
+        var changeValue = new BigInteger('' + Math.round(change * 1e8), 10);
+        if (changeValue > 0) {
+            theTx.addOutput(new Bitcoin.Address(addr), changeValue);
+        }
 
         try {
-            var sendTx = TX.construct();
-            var txJSON = TX.toBBE(sendTx);
-            var buf = sendTx.serialize();
+            theTx.signWithMultiSigScript(eckeys, redemption_script.buffer);
+            var txJSON = TX.toBBE(theTx);
+            var buf = theTx.serialize();
             var txHex = Crypto.util.bytesToHex(buf);
             setErrorState($('#txJSON'), false, '');
             $('#txJSON').val(txJSON);
@@ -1245,26 +1346,35 @@
         }
     }
 
-    function txSign() {
-        if (txFrom=='txFromSec')
-        {
-            txRebuild();
-            return;
-        }
-
-        var str = $('#txJSON').val();
-        TX.removeOutputs();
-        var sendTx = TX.fromBBE(str);
-
+    function parseInputs(unspent, addr) {
+        theTx.clearInputs();
+        var inputs;
         try {
-            sendTx = TX.resign(sendTx);
-            $('#txJSON').val(TX.toBBE(sendTx));
-            $('#txHex').val(Crypto.util.bytesToHex(sendTx.serialize()));
-            $('#txFee').val(Bitcoin.Util.formatValue(TX.getFee(sendTx)));
+            inputs = tx_parseBCI(unspent, addr);
         } catch(err) {
-            $('#txJSON').val('');
-            $('#txHex').val('');
+            inputs = parseTxs(unspent, addr);
         }
+
+        balance = BigInteger.ZERO;
+        for (var hash in inputs.unspenttxs) {
+            for (var outIndex in inputs.unspenttxs[hash]) {
+                var input = inputs.unspenttxs[hash][outIndex]
+                var txin = new Bitcoin.TransactionIn({
+                    outpoint: {
+                        hash: Crypto.util.bytesToBase64(Crypto.util.hexToBytes(hash)),
+                        index: outIndex
+                    },
+                    script: parseScript(input.script),
+                    sequence: 4294967295
+                });
+                theTx.addInput(txin);
+                balance = balance.add(input.amount)
+            }
+        }
+    }
+
+    function txSign() {
+        txRebuild();
     }
 
     function txOnChangeDest() {
@@ -1374,6 +1484,11 @@
         return false;
     }
 
+    function getParam(name) {
+        var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+        return results && (results[1] || null);
+    }
+
     $(document).ready( function() {
 
         if (window.location.hash)
@@ -1404,7 +1519,7 @@
         onInput('#extpub2', onChangeExtendedPublicKey);
         onInput('#extpub3', onChangeExtendedPublicKey);
         onInput('#extpublic_key_package', onChangeExtendedPublicKeyPackage);
-        onChangeExtendedPublicKey();
+        // onChangeExtendedPublicKey();
         
         onInput("#bip32private_key1", onChangeExtendedPrivateKey);
         onInput("#bip32private_key2", onChangeExtendedPrivateKey);
@@ -1428,30 +1543,35 @@
         $("#pubkey_order_prev").on('click', pubkey_order_prev );
         $("#pubkey_order_next").on('click', pubkey_order_next );
 
-        initializePublicKeys();
+        //initializePublicKeys();
         reqUpdateLabel();
         outofUpdateLabel();
 
         // transactions
 
-        $("#txRedemptionScript").val('522103d728ad6757d4784effea04d47baafa216cf474866c2d4dc99b1e8e3eb936e7302102d83bba35a8022c247b645eed6f81ac41b7c1580de550e7e82c75ad63ee9ac2fd2103aeb681df5ac19e449a872b9e9347f1db5a0394d2ec5caf2a9c143f86e232b0d953ae');
-        txOnChangeRedemptionScript();
+        if (getParam('s1')) $("#txSec1").val(getParam('s1'));
+        if (getParam('s2')) $("#txSec2").val(getParam('s2'));
+        if (getParam('s3')) $("#txSec3").val(getParam('s3'));
 
-        $("#txSec1").val('KybuecAGpGhfLP4y6bd6bidFn23dGK2EJJi8zvbwjoffYd14EsU6');
-        $("#txSec2").val('L11z9LhtCJmPPtK4cwMC4s9s9R3uXkuPkmGfjBmUGGHn7eFejiPC');
-        $("#txSec3").val('L1idoWSvtirHZgYU5eVFGHSHG9xXB72AyLSupfQrs6JUvUAPSKzS');
+        if (getParam('d')) $('#txDest').val(getParam('d'));
 
-        $('#txDest').val(tx_dest);
+        if (getParam('r')) {
+            $("#txRecoveryJson").val(getParam('r'));
+            txOnChangeRecoveryJson();
+            txGetUnspent();
+        }
 
-        txSetUnspent(tx_unspent);
 
         $('#txGetUnspent').click(txGetUnspent);
+        $('#txShowBCI').click(txShowBCI);
         $('#txType label input').on('change', txChangeType);
 
         onInput($('#txSec1'), txOnChangeSec);
         onInput($('#txSec2'), txOnChangeSec);
         onInput($('#txSec3'), txOnChangeSec);
         onInput($('#txRedemptionScript'), txOnChangeRedemptionScript);
+        onInput($('#txRecoveryJson'), txOnChangeRecoveryJson);
+        onInput($('#txAccounts'), txOnChangeAccount);
         onInput($('#txUnspent'), txOnChangeUnspent);
         onInput($('#txHex'), txOnChangeHex);
         onInput($('#txJSON'), txOnChangeJSON);
@@ -1461,7 +1581,7 @@
 
         $('#txAddDest').click(txOnAddDest);
         $('#txRemoveDest').click(txOnRemoveDest);
-        $('#txSend').click(txSend);
+        $('#txSend').click(txSendCoinbin);
         $('#txSign').click(txSign);
 
         // converter
