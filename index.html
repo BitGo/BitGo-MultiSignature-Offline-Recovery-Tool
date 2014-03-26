@@ -2,8 +2,8 @@
 <html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Multi-Signature Brainwallet - JavaScript Client-Side Bitcoin Address Generator</title>
-    <meta content="Client-side Bitcoin address and deterministic wallets generator, Base58 converter, transaction builder, signing and verifying messages with Bitcoin address" name="description"/>
+    <title>BitGo Account Recovery Tool</title>
+    <meta content="BitGo Recovery" name="description"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <meta content="bitcoin address generator" name="description" />
     <meta content="brainwallet" name="author" />
@@ -29,307 +29,103 @@
     <header class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
-          <button class="navbar-toggle" data-target=".bs-navbar-collapse" data-toggle="collapse" type="button"><span class="sr-only">Toggle navigation</span> <span class="icon-bar">&nbsp;</span> <span class="icon-bar">&nbsp;</span> <span class="icon-bar">&nbsp;</span></button> <a class="navbar-brand" href="/">Multisignature P2SH</a>
+          <button class="navbar-toggle" data-target=".bs-navbar-collapse" data-toggle="collapse" type="button"> <span class="icon-bar">&nbsp;</span> <span class="icon-bar">&nbsp;</span> <span class="icon-bar">&nbsp;</span></button> <a class="navbar-brand" href="https://www.bitgo.com/">BitGo Offline Recovery</a>
         </div>
-        <nav class="collapse navbar-collapse bs-navbar-collapse">
-          <ul class="nav navbar-nav">
-            <li><a data-toggle="tab" href="#bip32" id="tab-bip32">BIP32 (Alpha!)</a></li>
-            <li class="active">
-              <a data-toggle="tab" href="#generator">Create</a></li>
-            <li><a data-toggle="tab" href="#tx" id="tab-tx">Spend</a></li>
-            <li><a data-toggle="tab" href="#converter" id="tab-converter">Converter</a></li>
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-            <li class="dropdown" id="crCurrency">
-              <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="crSelect"><span id="crName">Bitcoin Mainnet</span>&nbsp;<b class="caret">&nbsp;</b></a>
-              <ul class="dropdown-menu">
-                <li><a href="http://blockchain.info/address/" id="btc_main">Bitcoin Mainnet</a></li>
-                <li><a href="http://blockexplorer.com/testnet/address/" id="btc_test">Bitcoin Testnet</a></li>
-                <!-- Unsupported right now
-                <li><a href="http://explorer.litecoin.net/address/" title="0x30">LTC</a></li>
-                <li><a href="http://explorer.dot-bit.org/a/" title="0x34">NMC</a></li>
-                <li><a href="http://ppc.cryptocoinexplorer.com/address/" title="0x37">PPC</a></li>
-                <li><a href="http://d.evco.in/abe/address/" title="0x8A">IXC</a></li>
-                <li><a href="http://nvc.cryptocoinexplorer.com/address/" title="0x08">NVC</a></li>
-                <li><a href="http://trc.cryptocoinexplorer.com/address/" title="0x00">TRC</a></li>
-                <li><a href="http://ftc.cryptocoinexplorer.com/address/" title="0x0E">FTC</a></li>
-                -->
-              </ul></li>
-          </ul>
-        </nav>
       </div>
     </header>
     <div class="container">
-      <div class="tab-content">
-        <!-- BIP32 -->
-        <div class="tab-pane fade in" id="bip32">
-          <form action="/" class="form-horizontal" method="get">
-            <fieldset>
-              <legend>Multi-Key BIP32 Deterministic Key Generator</legend>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="key_derivation_public">Key Derivation</label>
-                <div class="col-lg-10 controls">
-                  <div class="btn-group" data-toggle="buttons" id="key_derivation">
-                    <label class="btn btn-default active" title="Public key derivation will be used"><input id="key_derivation_public" name="key_derivation" type="radio" />Public key</label>
-                    <label class="btn btn-default" title="Private key derivation will be used"><input id="key_derivation_private" name="key_derivation" type="radio" />Private key</label>
-                  </div>&nbsp;&nbsp;<span class="help-inline" id="keyDerivationMsg">&nbsp;</span>
-                </div>
-              </div>
-              <div class="form-group" id="extpubkeys_from_group">
-                <label class="col-lg-2 control-label" for="extpubkeys_from_manual">Get Extended Public Keys From</label>
-                <div class="col-lg-10 controls">
-                  <div class="btn-group" data-toggle="buttons" id="extpubkeys_from">
-                    <label class="btn btn-default active" title="Extended Public Keys entered manually"><input id="extpubkeys_from_manual" name="extpubkeys_from" type="radio" />Manual</label>
-                    <label class="btn btn-default" title="Extended Public Keys extracted from Extended Public Key Package"><input id="extpubkeys_from_extpublic_key_package" name="extpubkeys_from" type="radio" />Extended Public Key Package</label>
-                  </div>&nbsp;&nbsp;<span class="help-inline" id="extpubkeysFromMsg">&nbsp;</span>
-                </div>
-              </div>
-              <div class="form-group" id="extpub1_group">
-                <label class="col-lg-2 control-label" for="extpub1">Extended Public Key #1</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="extpub1" type="text" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-group" id="extpub2_group">
-                <label class="col-lg-2 control-label" for="extpub2">Extended Public Key #2</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="extpub2" type="text" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-group" id="extpub3_group">
-                <label class="col-lg-2 control-label" for="extpub3">Extended Public Key #3</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="extpub3" type="text" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-group" id="bip32private_key1_group">
-                <label class="col-lg-2 control-label" for="bip32private_key1">Extended Private Key #1</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="bip32private_key1" type="text" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-group" id="bip32private_key2_group">
-                <label class="col-lg-2 control-label" for="bip32private_key2">Extended Private Key #2</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="bip32private_key2" type="text" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-group" id="bip32private_key3_group">
-                <label class="col-lg-2 control-label" for="bip32private_key3">Extended Private Key #3</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="bip32private_key3" type="text" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-group" id="extpubkeypackage_group">
-                <label class="col-lg-2 control-label" for="extpublic_key_package">Extended Public Key Package</label>
-                <div class="col-lg-10 controls">
-                  <textarea class="form-control" id="extpublic_key_package" readonly="readonly" rows="6"></textarea>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="chain_index">Chain Index</label>
-                <div class="col-lg-10 controls">
-                  <input class="form-control" id="chain_index" maxlength="5" type="text" value="0" />
-                </div>
-              </div>
-              <div class="form-group">
-                <div class="col-lg-offset-2 col-lg-10 controls">
-                    <hr />
-                </div>
-              </div>
-              <div class="form-group" id="genextpub1_group">
-                <label class="col-lg-2 control-label" for="genextpub1">Generated Extended Public Key #1</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="genextpub1" readonly="readonly" type="text" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-group" id="genextpub2_group">
-                <label class="col-lg-2 control-label" for="genextpub2">Generated Extended Public Key #2</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="genextpub2" readonly="readonly" type="text" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-group" id="genextpub3_group">
-                <label class="col-lg-2 control-label" for="genextpub3">Generated Extended Public Key #3</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="genextpub3" readonly="readonly" type="text" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-group" id="genbip32private_key1_group">
-                <label class="col-lg-2 control-label" for="genbip32private_key1">Generated Extended Private Key #1</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="genbip32private_key1" readonly="readonly" type="text" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-group" id="genbip32private_key2_group">
-                <label class="col-lg-2 control-label" for="genbip32private_key2">Generated Extended Private Key #2</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="genbip32private_key2" readonly="readonly" type="text" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-group" id="genbip32private_key3_group">
-                <label class="col-lg-2 control-label" for="genbip32private_key3">Generated Extended Private Key #3</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="genbip32private_key3" readonly="readonly" type="text" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-group">
-                <div class="col-lg-offset-2 col-lg-10 controls">
-                  <div class="input-group">
-                    <button class="btn btn-default" id="bip32CreateP2SH" title="Use the Generated Public Keys to create a Multisignature P2SH address" type="button">Create Multisignature P2SH</button>
-                    &nbsp;<button class="btn btn-default" id="bip32SpendP2SH" title="Use the Generated Private Keys to spend a Multisignature P2SH output" type="button">Spend Multisignature P2SH</button>
-                  </div>
-                </div>
-              </div>
-            </fieldset>
-          </form>
+        <div>
+          <strong>Welcome to the BitGo Offline Account Recovery tool.</strong> (<a data-target="#aboutDetails" data-toggle="collapse">About this tool</a>)<p>
+
+          <div id="aboutDetails" class="collapse">
+            <p>
+              BitGo ensures that your bitcoin is always in your control.  We created this tool so that
+              you can always access your bitcoin even if you are temporarily unable to access the
+              <a href="https://www.bitgo.com/">BitGo</a> website.
+            </p>
+
+            <p>
+              You probably won't ever want to use this tool, as the <a href="https://www.bitgo.com/">BitGo</a>
+              website is safer and easier to use.  But the point is that you can - and if anything should ever
+              happen to BitGo, you don't need to worry that your bitcoin will be lost.  Your bitcoin is in your
+              pocket, not ours, which is exactly where it belongs.
+            </p>
+
+            <p>
+              <strong>How To Use This?</strong>
+            </p>
+            <p>
+              BitGo periodically sends each user a 'disaster preparedness' email which contains a JSON attachment
+              describing all of your accounts.  You will need this file as well as your BitGo Account KeyCard
+              (which you printed when you created each of your accounts) for each account you want to access.
+            </p>
+
+            <p>
+              Using the backup information you provide, you can send your funds to a new account of your choosing.<p>
+            </p>
+
+            <p>
+              Caution:  This tool is intended for advanced users or emergency situations only.<p>
+            </p>
+
+            <a href="https://www.bitgo.com/"><button class="btn btn-primary" type="button">OK, Take Me Back To BitGo!</button></a>
+          </div>
+
         </div>
-        <!-- Create -->
-        <div class="tab-pane fade in active" id="generator">
-          <form action="/" class="form-horizontal" method="get">
-            <fieldset>
-              <legend>Create Multisignature P2SH</legend>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="pubkey_from_manual">Get Public Keys From</label>
-                <div class="col-lg-10 controls">
-                  <div class="btn-group" data-toggle="buttons" id="pubkeys_from">
-                    <label class="btn btn-default active" title="Public keys entered manually"><input id="pubkeys_from_manual" name="pubkeys_from" type="radio" />Manual</label>
-                    <label class="btn btn-default" title="Public Keys extracted from redemption script"><input id="pubkeys_from_redemption_script" name="pubkeys_from" type="radio" />Redemption Script</label>
-                  </div>&nbsp;&nbsp;<span class="help-inline" id="pubkeysFromMsg">&nbsp;</span>
-                </div>
+
+        <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" id="modalPassword" aria-hidden="true">
+          <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Please enter the passcode for this key</h4>
               </div>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="req_1">Signatures Required (M)</label>
-                <div class="col-lg-10 controls">
-                  <div class="btn-group" data-toggle="buttons" id="req_count">
-                    <label class="btn btn-default" title="Only one signature required to spend"><input id="req_1" name="req_count" type="radio" />1</label>
-                    <label class="btn btn-default active" title="Two signatures required to spend"><input id="req_2" name="req_count" type="radio" />2</label>
-                    <label class="btn btn-default" title="Three signatures required to spend"><input id="req_3" name="req_count" type="radio" />3</label>
-                  </div>&nbsp;&nbsp;<span class="help-inline" id="reqMsg">&nbsp;</span>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="col-lg-2 control-label disabled" for="outof_1">Provided Public Keys (N)</label>
-                <div class="col-lg-10 controls">
-                  <div class="btn-group" data-toggle="buttons" id="outof_count">
-                    <label class="btn btn-default disabled" title="One public key provided"><input id="outof_1" name="outof_count" type="radio" />1</label>
-                    <label class="btn btn-default disabled" title="Two public keys provided"><input id="outof_2" name="outof_count" type="radio" />2</label>
-                    <label class="btn btn-default active" title="Three public keys provided"><input id="outof_3" name="outof_count" type="radio" />3</label>
-                  </div>&nbsp;&nbsp;<span class="help-inline" id="outofMsg">&nbsp;</span>
-                </div>
-              </div>
-              <div class="form-group" id="pub1_group">
-                <label class="col-lg-2 control-label" for="pub1">Public Key #1 (SEC)</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="pub1" type="text" />
+              <div class="modal-body">
+                <div class="container">
+                  <div class="row">
+                    <input class="form-control col-xs-10" id="txSecPass" type="password" />
+                    <button data-dismiss="modal" class="btn btn-success col-xs-2" type="button">Ok</button>
                   </div>
                 </div>
               </div>
-              <div class="form-group" id="pub2_group">
-                <label class="col-lg-2 control-label" for="pub2">Public Key #2 (SEC)</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="pub2" type="text" />
-                  </div>
-                </div>
-              </div>
-              <div class="form-group" id="pub3_group">
-                <label class="col-lg-2 control-label" for="pub3">Public Key #3 (SEC)</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <input class="form-control" id="pub3" type="text" />
-                  </div>
-                </div>
-              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="" id="tx">
+          <form action="/" class="xform-horizontal" method="get">
+            <div class="row">
               <div class="form-group">
-                <label class="col-lg-2 control-label" for="pubkey_order">Key Ordering</label>
-                <div class="col-lg-10 controls">
-                  <div class="input-append">
-                    <div class="btn-group">
-                      <button class="btn btn-default" id="pubkey_order_prev" type="button">-</button>
-                      <button class="btn btn-default" id="pubkey_order_next" type="button">+</button>
-                      <button class="btn btn-default" disabled="disabled" id="pubkey_order_current" type="button">Order #0 (sorted)</button>
-                    </div>
-                  </div>
+                <label class="col-xs-4 control-label" for="txRedeemScript">Recovery JSON / Redeem Script</label>
+                <div class="col-xs-10 controls">
+                  <textarea class="form-control" id="txRecoveryJson" rows="5"></textarea>
                 </div>
               </div>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="redeption_script">Redemption Script</label>
-                <div class="col-lg-10 controls">
-                  <textarea class="form-control" id="redemption_script" readonly="readonly" rows="5"></textarea>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="addr">Address</label>
-                <div class="col-lg-10 controls">
-                  <input class="form-control" id="addr" readonly="readonly" type="text" />
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="genAddrQR">Address QR Code</label>
-                <div class="col-lg-10 controls">
-                  <a href="#" id="genAddrURL" target="_blank" title="Click to view address history (external link)"><span id="genAddrQR"></span></a>
-                </div>
-              </div>
-            </fieldset>
-          </form>
-        </div><!-- Spend -->
-        <div class="tab-pane fade" id="tx">
-          <form action="/" class="form-horizontal" method="get">
-            <fieldset>
-              <legend>Spend Multisignature P2SH</legend>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="txRedemptionScript">Redemption Script</label>
-                <div class="col-lg-10 controls">
-                  <textarea class="form-control" id="txRedemptionScript" rows="5"></textarea>
-                </div>
+              <select class='form-control collapse' id="txAccounts"></select>
+              <div>&nbsp;<!-- <button class="btn btn-default help-inline" id="txGetUnspent" type="button">Get Balance</button> -->
+                <img id="txLoading" class='collapse' src='images/ajax-loader.gif' />
               </div>
               <div class="form-group" id="txSec1_group">
-                <label class="col-lg-2 control-label" for="txSec1">Private Key #1</label>
-                <div class="col-lg-10 controls">
+                <label class="col-xs-4 control-label" for="txSec1">Private Key #1</label>
+                <div class="col-xs-10 controls">
                   <input class="form-control" id="txSec1" type="text" />
                 </div>
               </div>
               <div class="form-group" id="txSec2_group">
-                <label class="col-lg-2 control-label" for="txSec2">Private Key #2</label>
-                <div class="col-lg-10 controls">
+                <label class="col-xs-4 control-label" for="txSec2">Private Key #2</label>
+                <div class="col-xs-10 controls">
                   <input class="form-control" id="txSec2" type="text" />
                 </div>
               </div>
-              <div class="form-group" id="txSec3_group">
-                <label class="col-lg-2 control-label" for="txSec3">Private Key #3</label>
-                <div class="col-lg-10 controls">
+              <div class="form-group hidden" id="txSec3_group">
+                <label class="col-xs-2 control-label" for="txSec3">Private Key #3</label>
+                <div class="col-xs-10 controls">
                   <input class="form-control" id="txSec3" type="text" />
                 </div>
               </div>
               <div class="form-group">
-                <label class="col-lg-2 control-label" for="txAddr">Source Address</label>
-                <div class="col-lg-10 controls">
+                <label class="col-xs-4 control-label" for="txAddr">Source Address</label>
+                <div class="col-xs-10 controls">
                   <div class="row">
                     <div class="col-xs-6">
                       <input class="form-control" id="txAddr" readonly=1 type="text" />
@@ -337,31 +133,15 @@
                     <div class="col-xs-3">
                       <span class="input-group"><span class="input-group-addon">BTC</span> <input class="form-control" id="txBalance" placeholder="0.00" type="text" /></span>
                     </div>
-                    <div class="col-xs-2">
-                      <button class="btn btn-default" data-target="#txUnspentForm" data-toggle="collapse" id="txToggle" type="button">Edit Inputs</button>
+                    <div class="col-xs-3">
+                      <button class="collapse btn btn-default help-inline" id="txShowBCI" type="button">Details</button>
                     </div>
                   </div>
                 </div>
               </div>
-              <div class="collapse" id="txUnspentForm">
-                <div class="form-group">
-                  <label class="col-lg-2 control-label" for="txBBE">Use History From</label>
-                  <div class="col-lg-10 controls">
-                    <div class="btn-group" data-toggle="buttons" id="txType">
-                      <label class="btn btn-default active"><input id="txBCI" name="txType" type="radio" />BlockChain Info</label> <label class="btn btn-default"><input id="txBBE" name="txType" type="radio" />Bitcoin Block Explorer</label>
-                    </div>&nbsp;<button class="btn btn-default help-inline" id="txGetUnspent" type="button">Download</button>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="col-lg-2 control-label" for="txUnspent">Transaction History</label>
-                  <div class="col-lg-10 controls">
-                    <textarea class="form-control" id="txUnspent" rows="16"></textarea>
-                  </div>
-                </div>
-              </div>
               <div class="form-group txCC">
-                <label class="col-lg-2 control-label" for="txDest">Destination Address</label>
-                <div class="col-lg-10 controls">
+                <label class="col-xs-4 control-label" for="txDest">Destination Address</label>
+                <div class="col-xs-10 controls">
                   <div class="row">
                     <div class="col-xs-6">
                       <input autocomplete="off" class="form-control txDest" id="txDest" type="text" />
@@ -369,87 +149,86 @@
                     <div class="col-xs-3">
                       <span class="input-group"><span class="input-group-addon">BTC</span> <input class="form-control" id="txValue" placeholder="0.00" type="text" /></span>
                     </div>
-                    <div class="col-xs-3 help-inline">
-                      <button class="btn btn-default" id="txAddDest" type="button">+</button>&nbsp;<button class="btn btn-default" disabled="disabled" id="txRemoveDest" type="button">–</button>
-                    </div>
                   </div>
                 </div>
               </div>
               <div class="form-group">
-                <label class="col-lg-2 control-label" for="txJSON">JSON Transaction</label>
-                <div class="col-lg-10 controls">
-                  <textarea class="form-control" id="txJSON" readonly="readonly" rows="12" spellcheck="false"></textarea>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="txHex">Raw Transaction</label>
-                <div class="col-lg-10 controls">
-                  <textarea class="form-control" id="txHex" readonly="readonly" rows="5"></textarea>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="txFee">Fee</label>
-                <div class="col-lg-10 controls">
+                <label class="col-xs-4 control-label" for="txFee">Fee</label>
+                <div class="col-xs-10 controls">
                   <div class="input-group">
                     <span class="input-group-addon">BTC</span> <input class="form-control" id="txFee" type="text" value="0.0005" />
                   </div>
                 </div>
               </div>
               <div class="form-group">
-                <div class="col-lg-offset-2 col-lg-10 controls">
+                <div class="col-xs-offset-2 col-xs-10 controls">
                   <div class="input-group">
-                    <button class="btn btn-default" id="txSign" title="ECDSA signatures require a random number which means signing the same data twice results in different sigs." type="button">Re-sign</button> &nbsp;<button class="btn btn-default" id="txSend" type="button">Send Transaction</button>
+                    <button class="btn btn-default" id="txSend" type="button">Recover My Funds</button>
                   </div>
                 </div>
               </div>
-            </fieldset>
-          </form>
-        </div><!-- Converter -->
-        <div class="tab-pane fade" id="converter">
-          <form action="/" class="form-horizontal" method="get">
-            <fieldset>
-              <legend>Converter</legend>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="enc_from">Source Encoding</label>
-                <div class="col-lg-10 controls">
-                  <div class="btn-group" data-toggle="buttons" id="enc_from">
-                    <label class="btn btn-default active"><input id="from_hex" name="enc_from" type="radio" />Hex</label> <label class="btn btn-default"><input id="from_text" name="enc_from" type="radio" />Text</label> <label class="btn btn-default"><input id="from_base58" name="enc_from" type="radio" />Base58</label> <label class="btn btn-default"><input id="from_base64" name="enc_from" type="radio" />Base64</label> <label class="btn btn-default"><input id="from_rfc1751" name="enc_from" type="radio" />Rfc1751</label> <label class="btn btn-default"><input id="from_mnemonic" name="enc_from" type="radio" />Poetry</label>
+            </div>
+            <div class="row">
+              <a  data-target="#txAdvanced" data-toggle="collapse" id="txToggle">Advanced</a>
+              <div class="collapse" id="txAdvanced">
+                <div class="form-group">
+                  <label class="col-xs-2 control-label" for="txRedeemScript">Redeem Script</label>
+                  <div class="col-xs-10 controls">
+                    <textarea class="form-control" id="txRedeemScript" rows="5"></textarea>
                   </div>
                 </div>
-              </div>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="enc_from">Source Text</label>
-                <div class="col-lg-10 controls">
-                  <textarea class="form-control" id="src" rows="8" spellcheck="false"></textarea>
-                  <div>
-                    <span id="hint_from">&nbsp;</span>&nbsp;
+                <div class="form-group">
+                  <label class="col-xs-2 control-label" for="txChainCode">Chain Code</label>
+                  <div class="col-xs-10 controls">
+                    <input class="form-control" type='text' id="txChainCode" />
                   </div>
                 </div>
-              </div>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="enc_from">Convert To</label>
-                <div class="col-lg-10 controls">
-                  <div class="btn-group" data-toggle="buttons" id="enc_to">
-                    <label class="btn btn-default active"><input id="to_hex" name="enc_to" type="radio" />Hex</label> <label class="btn btn-default"><input id="to_text" name="enc_to" type="radio" />Text</label> <label class="btn btn-default"><input id="to_base58" name="enc_to" type="radio" />Base58</label> <label class="btn btn-default"><input id="to_base64" name="enc_to" type="radio" />Base64</label> <label class="btn btn-default"><input id="to_rfc1751" name="enc_to" type="radio" />Rfc1751</label> <label class="btn btn-default"><input id="to_mnemonic" name="enc_to" type="radio" />Poetry</label> <label class="btn btn-default"><input id="to_rot13" name="enc_to" type="radio" />Rot13</label>
+                <div class="form-group">
+                  <label class="col-xs-2 control-label" for="txBBE">Use History From</label>
+                  <div class="col-xs-10 controls">
+                    <div class="btn-group" data-toggle="buttons" id="txType">
+                      <label class="btn btn-default active"><input id="txBCI" name="txType" type="radio" />BlockChain Info</label> <label class="btn btn-default"><input id="txBBE" name="txType" type="radio" />Bitcoin Block Explorer</label>
+                    </div>&nbsp;<button class="btn btn-default help-inline" id="txGetUnspent" type="button">Download</button>
                   </div>
                 </div>
-              </div>
-              <div class="form-group">
-                <label class="col-lg-2 control-label" for="enc_from">Result</label>
-                <div class="col-lg-10 controls">
-                  <textarea class="form-control" id="dest" readonly="readonly" rows="8"></textarea>
-                  <div>
-                    <span id="hint_to">&nbsp;</span>&nbsp;
+                <div class="form-group">
+                  <div class="col-xs-2">
+                    <button class="btn btn-default" data-target="#txUnspentForm" data-toggle="collapse" id="txToggle" type="button">Edit Inputs</button>
+                  </div>
+                  <div class="col-xs-10 collapse" id="txUnspentForm">
+                    <label class="col-xs-2 control-label" for="txUnspent">Transaction History</label>
+                    <div class="col-xs-10 controls">
+                      <textarea class="form-control" id="txUnspent" rows="16"></textarea>
+                    </div>
                   </div>
                 </div>
+                <div class="form-group">
+                  <label class="col-xs-2 control-label" for="txJSON">JSON Transaction</label>
+                  <div class="col-xs-10 controls">
+                    <textarea class="form-control" id="txJSON" readonly="readonly" rows="12" spellcheck="false"></textarea>
+                  </div>
+                </div>
+                <div class="form-group">
+                <label class="col-xs-2 control-label" for="txHex">Raw Transaction</label>
+                  <div class="col-xs-10 controls">
+                    <textarea class="form-control" id="txHex" readonly="readonly" rows="5"></textarea>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="col-xs-2 control-label" for="txHex">Add/Remove outputs</label>
+                  <div class="col-xs-10 help-inline">
+                    <button class="btn btn-default" id="txAddDest" type="button">+</button>&nbsp;<button class="btn btn-default" disabled="disabled" id="txRemoveDest" type="button">–</button>
+                  </div>
+                </div>
+                <button class="btn btn-default" id="txSign" title="ECDSA signatures require a random number which means signing the same data twice results in different sigs." type="button">Re-sign</button> &nbsp;
               </div>
-            </fieldset>
+            </div>
           </form>
         </div>
         <hr />
         <footer>
           <p>
-            This work of art is public domain, source code available at <a href="https://github.com/ms-brainwallet/ms-brainwallet.github.io">GitHub</a>.
+            The source code for this tool is available at <a href="https://github.com/ms-brainwallet/ms-brainwallet.github.io">GitHub</a> and is licensed under the Apache 2.0 Open Source license.
           </p>
         </footer>
       </div>

@@ -80,7 +80,7 @@ var TX = new function () {
             var seq = u32(f);
             var txin = new Bitcoin.TransactionIn({
                 outpoint: { 
-                    hash: Crypto.util.bytesToBase64(op),
+                    hash: Crypto.util.bytesToHex(op.reverse()),
                     index: n
                 },
                 script: new Bitcoin.Script(script),
@@ -127,9 +127,9 @@ var TX = new function () {
 
         for (var i = 0; i < sendTx.ins.length; i++) {
             var txin = sendTx.ins[i];
-            var hash = Crypto.util.base64ToBytes(txin.outpoint.hash);
+            var hash = Crypto.util.hexToBytes(txin.outpoint.hash);
             var n = txin.outpoint.index;
-            var prev_out = {'hash': Crypto.util.bytesToHex(hash.reverse()), 'n': n};
+            var prev_out = {'hash': hash, 'n': n};
             var seq = txin.sequence;
 
             if (n == 4294967295) {
@@ -143,9 +143,7 @@ var TX = new function () {
 
         for (var i = 0; i < sendTx.outs.length; i++) {
             var txout = sendTx.outs[i];
-            var bytes = txout.value.slice(0);
-            var fval = parseFloat(Bitcoin.Util.formatValue(bytes.reverse()));
-            var value = fval.toFixed(8);
+            var value = parseFloat(txout.value/1e8).toFixed(8)
             var spk = dumpScript(txout.script);
             r['out'].push({'value' : value, 'scriptPubKey': spk});
         }
@@ -175,8 +173,8 @@ var TX = new function () {
             var seq = txi['sequence'] === undefined ? 4294967295 : txi['sequence'];
 
             var txin = new Bitcoin.TransactionIn({
-                outpoint: { 
-                    hash: Crypto.util.bytesToBase64(hash.reverse()),
+                outpoint: {
+                    hash: Crypto.util.bytesToHex(hash),
                     index: n
                 },
                 script: new Bitcoin.Script(script),
@@ -235,7 +233,7 @@ function tx_parseBCI(data, address) {
 
     delete unspenttxs;
     var unspenttxs = {};
-    var balance = BigInteger.ZERO;
+    var balance = 0;
     for (var i = 0 ; i < txs.length ; i++) {
         var o = txs[i];
         var lilendHash = o.tx_hash;
@@ -243,11 +241,11 @@ function tx_parseBCI(data, address) {
         //convert script back to BBE-compatible text
         var script = dumpScript( new Bitcoin.Script(Crypto.util.hexToBytes(o.script)) );
 
-        var value = new BigInteger('' + o.value, 10);
+        var value = parseInt(o.value);
         if (!(lilendHash in unspenttxs))
             unspenttxs[lilendHash] = {};
         unspenttxs[lilendHash][o.tx_output_n] = {amount: value, script: script};
-        balance = balance.add(value);
+        balance += value;
     }
     return {balance:balance, unspenttxs:unspenttxs};
 }

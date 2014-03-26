@@ -48,7 +48,7 @@
         else
             return [0x80|2, len >> 8, len & 0xff];
     }
-    
+
     encode_id = function(id, s) {
         var len = encode_length(s.length);
         return [id].concat(len).concat(s);
@@ -125,7 +125,7 @@
                     encode_integer(1)
                 )
             ),
-            encode_constructed(1, 
+            encode_constructed(1,
                 encode_bitstring([0].concat(encoded_pub))
             )
         );
@@ -252,8 +252,8 @@
                     (t[i] == 'public') ? "#extpub3" : "#bip32private_key3"
             );
 
-            if( keyset.key1 !== null && 
-               (   ( (keyset.key1.version == MAINNET_PUBLIC || keyset.key1.version == MAINNET_PRIVATE) && coin === 'btc_test' ) 
+            if( keyset.key1 !== null &&
+               (   ( (keyset.key1.version == MAINNET_PUBLIC || keyset.key1.version == MAINNET_PRIVATE) && coin === 'btc_test' )
                 || ( (keyset.key1.version == TESTNET_PUBLIC || keyset.key1.version == TESTNET_PRIVATE) && coin === 'btc_main' ) )
                ) {
                 if( keyset.key1.version == MAINNET_PUBLIC ) keyset.key1.version = TESTNET_PUBLIC;
@@ -266,8 +266,8 @@
                         (t[i] == 'public') ? keyset.key1.extended_public_key_string("base58") : keyset.key1.extended_private_key_string("base58"));
             }
 
-            if( keyset.key2 !== null && 
-               (   ( (keyset.key2.version == MAINNET_PUBLIC || keyset.key2.version == MAINNET_PRIVATE) && coin === 'btc_test' ) 
+            if( keyset.key2 !== null &&
+               (   ( (keyset.key2.version == MAINNET_PUBLIC || keyset.key2.version == MAINNET_PRIVATE) && coin === 'btc_test' )
                 || ( (keyset.key2.version == TESTNET_PUBLIC || keyset.key2.version == TESTNET_PRIVATE) && coin === 'btc_main' ) )
                ) {
                 if( keyset.key2.version == MAINNET_PUBLIC ) keyset.key2.version = TESTNET_PUBLIC;
@@ -280,8 +280,8 @@
                         (t[i] == 'public') ? keyset.key2.extended_public_key_string("base58") : keyset.key2.extended_private_key_string("base58"));
             }
 
-            if( keyset.key3 !== null && 
-               (   ( (keyset.key3.version == MAINNET_PUBLIC || keyset.key3.version == MAINNET_PRIVATE) && coin === 'btc_test' ) 
+            if( keyset.key3 !== null &&
+               (   ( (keyset.key3.version == MAINNET_PUBLIC || keyset.key3.version == MAINNET_PRIVATE) && coin === 'btc_test' )
                 || ( (keyset.key3.version == TESTNET_PUBLIC || keyset.key3.version == TESTNET_PRIVATE) && coin === 'btc_main' ) )
                ) {
                 if( keyset.key3.version == MAINNET_PUBLIC ) keyset.key3.version = TESTNET_PUBLIC;
@@ -337,7 +337,7 @@
         var extpackage = Crypto.util.hexToBytes($("#extpublic_key_package").val());
 
         var checksum = extpackage.slice(extpackage.length-4);
-        if( Crypto.util.bytesToHex(Crypto.SHA256(Crypto.SHA256(extpackage.slice(0, extpackage.length-4), {asBytes: true}), {asBytes: true}).slice(0, 4)) 
+        if( Crypto.util.bytesToHex(Crypto.SHA256(Crypto.SHA256(extpackage.slice(0, extpackage.length-4), {asBytes: true}), {asBytes: true}).slice(0, 4))
             != Crypto.util.bytesToHex(checksum) ) {
             throw new Error("Invalid extended public key package");
         }
@@ -377,7 +377,7 @@
         clearTimeout(timeout);
         timeout = setTimeout(generate_extended_public_key_package, TIMEOUT);
     }
-    
+
     function onChangeExtendedPublicKeyPackage() {
         $("#extpub1").val("");
         $("#extpub2").val("");
@@ -465,26 +465,26 @@
 
         var keyset = get_extended_key_set("#genextpub1", "#genextpub2", "#genextpub3");
 
-        if( keyset.key1 !== null ) 
+        if( keyset.key1 !== null )
             $("#pub1").val(Crypto.util.bytesToHex(keyset.key1.eckey.pub.getEncoded(true)));
-        else 
+        else
             $("#pub1").val("");
 
-        if( keyset.key2 !== null ) 
+        if( keyset.key2 !== null )
             $("#pub2").val(Crypto.util.bytesToHex(keyset.key2.eckey.pub.getEncoded(true)));
-        else 
+        else
             $("#pub2").val("");
 
-        if( keyset.key3 !== null ) 
+        if( keyset.key3 !== null )
             $("#pub3").val(Crypto.util.bytesToHex(keyset.key3.eckey.pub.getEncoded(true)));
-        else 
+        else
             $("#pub3").val("");
 
         if( setup_only ) return;
 
         pubkey_order = 0;
         update_pubkey_order();
-        generate_redemption_script();
+        generate_redeem_script();
 
         // Change the page.
         $('a[href="#generator"]').click();
@@ -518,10 +518,10 @@
 
         // Change the page.
         $('a[href="#tx"]').click();
-        generate_redemption_script();
+        generate_redeem_script();
 
-        $("#txRedemptionScript").val('');
-        txOnChangeRedemptionScript();
+        $("#txRedeemScript").val('');
+        txOnChangeRedeemScript();
     }
 
     // --- create ---
@@ -534,9 +534,9 @@
         $('#pub1').attr('readonly', pubkeys_from != 'manual');
         $('#pub2').attr('readonly', pubkeys_from != 'manual');
         $('#pub3').attr('readonly', pubkeys_from != 'manual');
-        $('#redemption_script').attr('readonly', pubkeys_from != 'redemption_script');
+        $('#redeem_script').attr('readonly', pubkeys_from != 'redeem_script');
         if( pubkeys_from == 'manual' ) $("#pub1").focus();
-        else if( pubkeys_from == 'redemption_script' ) $("#redemption_script").focus();
+        else if( pubkeys_from == 'redeem_script' ) $("#redeem_script").focus();
     }
 
     function update_pubkeys_from() {
@@ -553,7 +553,7 @@
         req_count = parseInt($(this).attr('id').substring(4));
         reqUpdateLabel();
         clearTimeout(timeout);
-        timeout = setTimeout(generate_redemption_script, TIMEOUT);
+        timeout = setTimeout(generate_redeem_script, TIMEOUT);
     }
 
     function update_outof() {
@@ -572,7 +572,7 @@
         outofUpdateLabel();
         update_outof();
         clearTimeout(timeout);
-        timeout = setTimeout(generate_redemption_script, TIMEOUT);
+        timeout = setTimeout(generate_redeem_script, TIMEOUT);
     }
 
     function update_pubkey_order() {
@@ -584,7 +584,7 @@
         if( pubkey_order == 0 ) pubkey_order = 5;
         else                    pubkey_order -= 1;
         update_pubkey_order();
-        generate_redemption_script();
+        generate_redeem_script();
     }
 
     function pubkey_order_next() {
@@ -592,7 +592,7 @@
         if( pubkey_order == 0 ) $("#pubkey_order_current").html("Order #0 (sorted)");
         else                    $("#pubkey_order_current").html("Order #" + pubkey_order);
         update_pubkey_order();
-        generate_redemption_script();
+        generate_redeem_script();
     }
 
     function compare_arrays(a, b) {
@@ -670,7 +670,7 @@
         throw new Error("Invalid");
     }
 
-    function generate_redemption_script() {
+    function generate_redeem_script() {
         var pub1_str = pad($('#pub1').val(), 65, '0');
         var pub1 = Crypto.util.hexToBytes(pub1_str);
 
@@ -698,30 +698,30 @@
         pubkey3.pub = pub3;
         pubkey3.pubKeyHash = Bitcoin.Util.sha256ripe160(pubkey3.pub);
 
-        // New versions of BitcoinJS-lib have createMultiSigOutputScript, but the one 
+        // New versions of BitcoinJS-lib have createMultiSigOutputScript, but the one
         // currently in brainwallet at github doesn't have it, so we must build the
         // script manually.
-        var redemption_script = new Bitcoin.Script();
+        var redeem_script = new Bitcoin.Script();
 
-        redemption_script.writeOp([Bitcoin.Opcode.map["OP_1"], Bitcoin.Opcode.map["OP_2"], Bitcoin.Opcode.map["OP_3"]][req_count - 1]);
-        
+        redeem_script.writeOp([Bitcoin.Opcode.map["OP_1"], Bitcoin.Opcode.map["OP_2"], Bitcoin.Opcode.map["OP_3"]][req_count - 1]);
+
         var pubkeys = new Array(pub1, pub2, pub3);
         for( var i = 0; i < 3 && i < outof_count; i++ ) {
-            redemption_script.writeBytes(pubkeys[i]);
+            redeem_script.writeBytes(pubkeys[i]);
         }
 
-        redemption_script.writeOp(Bitcoin.Opcode.map["OP_1"] + (pubkeys.length - 1));
-        redemption_script.writeOp(Bitcoin.Opcode.map["OP_CHECKMULTISIG"]);
+        redeem_script.writeOp(Bitcoin.Opcode.map["OP_1"] + (pubkeys.length - 1));
+        redeem_script.writeOp(Bitcoin.Opcode.map["OP_CHECKMULTISIG"]);
 
-        var redemption_script_str = Crypto.util.bytesToHex(redemption_script.buffer);
-        $("#redemption_script").val(redemption_script_str);
+        var redeem_script_str = Crypto.util.bytesToHex(redeem_script.buffer);
+        $("#redeem_script").val(redeem_script_str);
 
         update_p2sh_address();
     }
 
     function update_p2sh_address() {
         // Hash the script to produce the bitcoin address:
-        var redemptionScriptHash160 = Bitcoin.Util.sha256ripe160(Crypto.util.hexToBytes($("#redemption_script").val()));
+        var redemptionScriptHash160 = Bitcoin.Util.sha256ripe160(Crypto.util.hexToBytes($("#redeem_script").val()));
         var p2sh_addr = new Bitcoin.Address(redemptionScriptHash160);
         p2sh_addr.version = (coin == 'btc_main') ? 5 : 196;
         $("#addr").val('' + p2sh_addr);
@@ -737,18 +737,18 @@
         $('#genAddrURL').attr('title', p2sh_addr);
     }
 
-    function parse_redemption_script() {
-        var redemption_script_bytes = Crypto.util.hexToBytes($("#redemption_script").val());
-        var redemption_script = new Bitcoin.Script(redemption_script_bytes);
+    function parse_redeem_script() {
+        var redeem_script_bytes = Crypto.util.hexToBytes($("#redeem_script").val());
+        var redeem_script = new Bitcoin.Script(redeem_script_bytes);
 
-        var m = redemption_script.chunks[0] - Bitcoin.Opcode.map["OP_1"] + 1;
+        var m = redeem_script.chunks[0] - Bitcoin.Opcode.map["OP_1"] + 1;
         if( m < 1 || m > 3 ) return;
 
-        var slen = redemption_script.chunks.length;
+        var slen = redeem_script.chunks.length;
         if( slen < 3 ) return;
-        if( redemption_script.chunks[slen - 1] != Bitcoin.Opcode.map["OP_CHECKMULTISIG"] ) return;
+        if( redeem_script.chunks[slen - 1] != Bitcoin.Opcode.map["OP_CHECKMULTISIG"] ) return;
 
-        var n = redemption_script.chunks[slen - 2] - Bitcoin.Opcode.map["OP_1"] + 1;
+        var n = redeem_script.chunks[slen - 2] - Bitcoin.Opcode.map["OP_1"] + 1;
         if( n < 1 || n > 3 ) return;
 
         // Temporary
@@ -758,7 +758,7 @@
         }
 
         if( slen == (n + 3) ) {
-            var new_keys = [redemption_script.chunks[1], redemption_script.chunks[2], redemption_script.chunks[3]];
+            var new_keys = [redeem_script.chunks[1], redeem_script.chunks[2], redeem_script.chunks[3]];
             pubkey_order = determine_permutation(new_keys);
             if( n >= 1 ) $("#pub1").val(Crypto.util.bytesToHex(new_keys[0]));
             if( n >= 2 ) $("#pub2").val(Crypto.util.bytesToHex(new_keys[1]));
@@ -772,12 +772,12 @@
 
     function onChangePublicKey() {
         clearTimeout(timeout);
-        timeout = setTimeout(generate_redemption_script, TIMEOUT);
+        timeout = setTimeout(generate_redeem_script, TIMEOUT);
     }
 
-    function onChangeRedemptionScript() {
+    function onChangeRedeemScript() {
         clearTimeout(timeout);
-        timeout = setTimeout(parse_redemption_script, TIMEOUT);
+        timeout = setTimeout(parse_redeem_script, TIMEOUT);
     }
 
     function initializePublicKeys() {
@@ -787,7 +787,7 @@
         $('#pub1').focus();
         pubkeysFromUpdateLabel();
         reqUpdateLabel();
-        generate_redemption_script();
+        generate_redeem_script();
     }
 
     // --- converter ---
@@ -834,7 +834,7 @@
     function issubset(a, ssv) {
         var b = ssv.trim().split(' ');
         for (var i = 0; i < b.length; i++) {
-            if (a.indexOf(b[i].toLowerCase()) == -1 
+            if (a.indexOf(b[i].toLowerCase()) == -1
                 && a.indexOf(b[i].toUpperCase()) == -1)
             return false;
         }
@@ -843,13 +843,13 @@
 
     function autodetect(str) {
         var enc = [];
-        if (isHex(str)) 
+        if (isHex(str))
             enc.push('hex');
         if (isBase58(str))
             enc.push('base58');
-        if (issubset(mn_words, str)) 
+        if (issubset(mn_words, str))
             enc.push('mnemonic');
-        if (issubset(rfc1751_wordlist, str)) 
+        if (issubset(rfc1751_wordlist, str))
             enc.push('rfc1751');
         if (isBase64(str))
             enc.push('base64');
@@ -909,8 +909,8 @@
 
         if (bytes.length > 0) {
             if (from == 'base58') {
-                try { 
-                    var res = parseBase58Check(str); 
+                try {
+                    var res = parseBase58Check(str);
                     type = 'Check ver.' + res[0];
                     bytes = res[1];
                 } catch (err) {
@@ -978,9 +978,38 @@
     var txType = 'txBCI';
     var txFrom = 'txFromSec';
 
-    function txOnChangeSec() {
+    function txOnChangeSec(field) {
+        try {
+          var input  = field.value.replace(/ /g, '').trim();
+          // The field may be encrypted.
+          var elt = JSON.parse(input);
+
+          try {
+            var pass = $('#txSecPass')[0].value;
+            var result = sjcl.decrypt(pass, input);
+            field.value = result;
+          } catch (e) {
+            $('#txSecPass')[0].value = '';
+            $('#modalPassword').modal('show');
+          }
+
+        } catch (e) {
+          // ignore.
+        }
         clearTimeout(timeout);
         timeout = setTimeout(txRebuild, TIMEOUT);
+    }
+
+    function txOnChangeSec1() {
+        txOnChangeSec($('#txSec1')[0]);
+    }
+
+    function txOnChangeSec2() {
+        txOnChangeSec($('#txSec2')[0]);
+    }
+
+    function txOnChangeSec3() {
+        txOnChangeSec($('#txSec3')[0]);
     }
 
     function txOnChangeAccount() {
@@ -990,15 +1019,15 @@
         var json = $("#txRecoveryJson").val().trim();
         var recover = JSON.parse(json);
         var item = recover.addresses[$selected];
-        $("#txRedemptionScript").val(item.public.redeemScript);
+        $("#txRedeemScript").val(item.public.redeemScript);
         $("#txChainCode").val(item.chain ? item.chain.code : '');
-        txOnChangeRedemptionScript();
+        txOnChangeRedeemScript();
         $details.fadeIn();
         txGetUnspent();
       } else {
-        $("#txRedemptionScript").val('');
+        $("#txRedeemScript").val('');
         $("#txChainCode").val('');
-        txOnChangeRedemptionScript();
+        txOnChangeRedeemScript();
         $details.fadeOut();
       }
     }
@@ -1007,6 +1036,7 @@
       var json = $("#txRecoveryJson").val().trim();
       var $accounts = $('#txAccounts');
       var $details = $('#txShowBCI');
+      // Check if it looks like a json file.
       if (json[0] == '{') {
         var recover = JSON.parse(json);
         $accounts.html('');
@@ -1024,34 +1054,72 @@
         $details.hide();
       }
       else {
-        $("#txRedemptionScript").val(json);
-        txOnChangeRedemptionScript();
+        $("#txRedeemScript").val(json);
+        txOnChangeRedeemScript();
         $accounts.hide();
         $details.show();
       }
     }
 
-    function txOnChangeRedemptionScript() {
-        var script_hex = $('#txRedemptionScript').val().trim();
+    // Verify the redemption script looks roughly like a redemption script.
+    function isPossibleRedeemScript(redeem_script) {
+      var m = redeem_script.chunks[0] - Bitcoin.Opcode.map["OP_1"] + 1;
+      if( m < 1 || m > 3 ) {
+        return false;
+      }
+
+      var slen = redeem_script.chunks.length;
+      if( slen < 3 ) {
+        return false;
+      }
+      if( redeem_script.chunks[slen - 1] != Bitcoin.Opcode.map["OP_CHECKMULTISIG"] ) {
+        return false;
+      }
+
+      var n = redeem_script.chunks[slen - 2] - Bitcoin.Opcode.map["OP_1"] + 1;
+      if( n < 1 || n > 3 ) {
+        return false;
+      }
+      return true;
+    }
+
+    function txOnChangeRedeemScript() {
+        var script_hex = $('#txRedeemScript').val().replace(/[\r\n\b ]/g, '').trim();
         if (script_hex == '') {
           $("#txAddr").val('');
           $("#txSec3_group").addClass('hidden');
           return;
         }
 
-        var bytes = Crypto.util.hexToBytes(script_hex);
-        var redemption_script = new Bitcoin.Script(bytes);
+        var redeem_script;
+        try {
+          // Try decoding as a hex string
+          var bytes = Bitcoin.Util.hexToBytes(script_hex);
+          redeem_script = new Bitcoin.Script(bytes);
+          if (!isPossibleRedeemScript(redeem_script)) {
+            throw 'not a redeem script';
+          }
+        } catch (e) {
+          // Failed - try decoding as a base58 encoded hex string first.
+          script_hex = Bitcoin.Base58.decodeToString(script_hex);
+          bytes = Crypto.util.hexToBytes(script_hex);
+          redeem_script = new Bitcoin.Script(bytes);
+          if (isPossibleRedeemScript(redeem_script)) {
+            $('#txRedeemScript').val(script_hex);
+          }
+        }
 
         // Hash the script to produce the bitcoin address:
-        var redemptionScriptHash160 = Bitcoin.Util.sha256ripe160(redemption_script.buffer);
+        var redemptionScriptHash160 = Bitcoin.Util.sha256ripe160(redeem_script.buffer);
         var p2sh_addr = new Bitcoin.Address(redemptionScriptHash160);
         p2sh_addr.version = (coin == 'btc_main') ? 5 : 196;
         $("#txAddr").val('' + p2sh_addr);
+        txGetUnspent();
 
         // Show/Hide private key spaces depending on M
-        var m = redemption_script.buffer[0] - Bitcoin.Opcode.map["OP_1"] + 1;
+        var m = redeem_script.buffer[0] - Bitcoin.Opcode.map["OP_1"] + 1;
         if( m < 1 || m > 3 ) {
-            setErrorState($('#txOnChangeRedemptionScript'), true, 'Redemption script is not valid');
+            setErrorState($('#txOnChangeRedeemScript'), true, 'Redeem script is not valid');
             return;
         }
 
@@ -1068,8 +1136,8 @@
         txUnspent = JSON.stringify(r, null, 4);
         $('#txUnspent').val(txUnspent);
         var address = $('#txAddr').val();
-        parseInputs(txUnspent, address);
-        var fval = Bitcoin.Util.formatValue(balance);
+        var balance = parseInputs(txUnspent, address);
+        var fval = balance;
         var fee = parseFloat($('#txFee').val());
         $('#txBalance').val(fval);
         var value = Math.floor((fval-fee)*1e8)/1e8;
@@ -1217,7 +1285,7 @@
     function txKey(i) {
         var sec = $('#txSec' + i).val();
         try {
-            var res = parseBase58Check(sec); 
+            var res = parseBase58Check(sec);
             var version = res[0];
             var payload = res[1];
         } catch (err) {
@@ -1256,10 +1324,11 @@
     }
 
     function txRebuild() {
-        var bytes = Crypto.util.hexToBytes($('#txRedemptionScript').val());
-        var redemption_script = new Bitcoin.Script(bytes);
-        var m = redemption_script.buffer[0] - Bitcoin.Opcode.map["OP_1"] + 1;
-        var n = redemption_script.buffer[redemption_script.buffer.length-2] - Bitcoin.Opcode.map["OP_1"] + 1;
+        var hexString = $('#txRedeemScript').val().replace(/ /g, '').trim();
+        var bytes = Crypto.util.hexToBytes(hexString);
+        var redeem_script = new Bitcoin.Script(bytes);
+        var m = redeem_script.buffer[0] - Bitcoin.Opcode.map["OP_1"] + 1;
+        var n = redeem_script.buffer[redeem_script.buffer.length-2] - Bitcoin.Opcode.map["OP_1"] + 1;
 
         var eckey1 = (m >= 1) ? txKey(1) : null;
         var eckey2 = (m >= 2) ? txKey(2) : null;
@@ -1277,9 +1346,9 @@
 
         // Need to determine the order of the keys in the redemption script.
         // And build 'eckeys' in an order that matches
-        var pubkey1 = (n >= 1) ? redemption_script.chunks[1] : null;
-        var pubkey2 = (n >= 2) ? redemption_script.chunks[2] : null;
-        var pubkey3 = (n >= 3) ? redemption_script.chunks[3] : null;
+        var pubkey1 = (n >= 1) ? redeem_script.chunks[1] : null;
+        var pubkey2 = (n >= 2) ? redeem_script.chunks[2] : null;
+        var pubkey3 = (n >= 3) ? redeem_script.chunks[3] : null;
         var pubkeys = [pubkey1, pubkey2, pubkey3];
 
         for( var j = 0; j < pubkeys.length; j++ ) {
@@ -1308,7 +1377,7 @@
         var unspent = $('#txUnspent').val();
         var fee = parseFloat('0'+$('#txFee').val());
 
-        parseInputs(unspent, addr);
+        var balance = parseInputs(unspent, addr);
 
         theTx.clearOutputs();
 
@@ -1317,20 +1386,20 @@
         for (var i = 0 ; i < o.length ; i++) {
             if (o[i].dest != "") {
                 fval += o[i].fval;
-                var value = new BigInteger('' + Math.round(o[0].fval * 1e8), 10);
+                var value = Math.floor(o[0].fval * 1e8);
                 theTx.addOutput(new Bitcoin.Address(o[0].dest), value);
             }
         }
 
         // send change back or it will be sent as fee
-        var change = Bitcoin.Util.formatValue(balance) - fval - fee;
-        var changeValue = new BigInteger('' + Math.round(change * 1e8), 10);
+        var change = balance - fval - fee;
+        var changeValue = Math.floor(change * 1e8);
         if (changeValue > 0) {
             theTx.addOutput(new Bitcoin.Address(addr), changeValue);
         }
 
         try {
-            theTx.signWithMultiSigScript(eckeys, redemption_script.buffer);
+            theTx.signWithMultiSigScript(eckeys, redeem_script.buffer);
             var txJSON = TX.toBBE(theTx);
             var buf = theTx.serialize();
             var txHex = Crypto.util.bytesToHex(buf);
@@ -1355,22 +1424,23 @@
             inputs = parseTxs(unspent, addr);
         }
 
-        balance = BigInteger.ZERO;
+        var balance = 0;
         for (var hash in inputs.unspenttxs) {
             for (var outIndex in inputs.unspenttxs[hash]) {
                 var input = inputs.unspenttxs[hash][outIndex]
                 var txin = new Bitcoin.TransactionIn({
                     outpoint: {
-                        hash: Crypto.util.bytesToBase64(Crypto.util.hexToBytes(hash)),
-                        index: outIndex
+                        hash: Bitcoin.Util.bytesToHex(Bitcoin.Util.hexToBytes(hash).reverse()),
+                        index: parseInt(outIndex)
                     },
                     script: parseScript(input.script),
                     sequence: 4294967295
                 });
                 theTx.addInput(txin);
-                balance = balance.add(input.amount)
+                balance += (input.amount / 1e8);
             }
         }
+        return balance;
     }
 
     function txSign() {
@@ -1476,7 +1546,7 @@
         ADDRESS_URL_PREFIX = $(this).attr('href');
         $('#crName').text($(this).text());
         $('#crSelect').dropdown('toggle');
-        txOnChangeRedemptionScript();
+        txOnChangeRedeemScript();
         update_p2sh_address();
         translate_txDest();
         translate_extended_public_keys();
@@ -1520,7 +1590,7 @@
         onInput('#extpub3', onChangeExtendedPublicKey);
         onInput('#extpublic_key_package', onChangeExtendedPublicKeyPackage);
         // onChangeExtendedPublicKey();
-        
+
         onInput("#bip32private_key1", onChangeExtendedPrivateKey);
         onInput("#bip32private_key2", onChangeExtendedPrivateKey);
         onInput("#bip32private_key3", onChangeExtendedPrivateKey);
@@ -1534,7 +1604,7 @@
         onInput('#pub1', onChangePublicKey);
         onInput('#pub2', onChangePublicKey);
         onInput('#pub3', onChangePublicKey);
-        onInput('#redemption_script', onChangeRedemptionScript);
+        onInput('#redeem_script', onChangeRedeemScript);
 
         $('#pubkeys_from label input').on('change', update_pubkeys_from );
         $('#req_count label input').on('change', update_req_count );
@@ -1553,6 +1623,13 @@
         if (getParam('s2')) $("#txSec2").val(getParam('s2'));
         if (getParam('s3')) $("#txSec3").val(getParam('s3'));
 
+        $('#modalPassword').on('hidden.bs.modal', function (e) {
+          // A password was given; see if it is used in our keys
+          txOnChangeSec1();
+          txOnChangeSec2();
+          txOnChangeSec3();
+        });
+
         if (getParam('d')) $('#txDest').val(getParam('d'));
 
         if (getParam('r')) {
@@ -1566,10 +1643,10 @@
         $('#txShowBCI').click(txShowBCI);
         $('#txType label input').on('change', txChangeType);
 
-        onInput($('#txSec1'), txOnChangeSec);
-        onInput($('#txSec2'), txOnChangeSec);
-        onInput($('#txSec3'), txOnChangeSec);
-        onInput($('#txRedemptionScript'), txOnChangeRedemptionScript);
+        onInput($('#txSec1'), txOnChangeSec1);
+        onInput($('#txSec2'), txOnChangeSec2);
+        onInput($('#txSec3'), txOnChangeSec3);
+        onInput($('#txRedeemScript'), txOnChangeRedeemScript);
         onInput($('#txRecoveryJson'), txOnChangeRecoveryJson);
         onInput($('#txAccounts'), txOnChangeAccount);
         onInput($('#txUnspent'), txOnChangeUnspent);
