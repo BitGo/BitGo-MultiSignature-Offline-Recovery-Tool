@@ -1,5 +1,10 @@
 # BitGo Recovery Tool for BitGo MultiSignature Wallets
 
+# Deprecation Notice!
+
+This recovery tool is only meant to be used on legacy BitGo wallets.
+The current recovery tool can be found in the BitGoJS SDK's 'example' directory.
+
 # Background
 
 This open-source, standalone tool is a utility to demonstrate that BitGo
