@@ -1,3 +1,0 @@
-[submodule "external/bitcoinjs-lib"]
-	path = external/bitcoinjs-lib
-	url = git@github.com:BitGo/bitcoinjs-lib.git
