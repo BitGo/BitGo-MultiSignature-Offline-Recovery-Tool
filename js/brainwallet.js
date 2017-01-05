@@ -1162,7 +1162,7 @@
     function txGetUnspent() {
         var addr = $('#txAddr').val();
 
-        var url = (txType == 'txBCI') ? 'https://blockchain.info/unspent?cors=true&address=' + addr :
+        var url = (txType == 'txBCI') ? 'https://blockchain.info/unspent?cors=true&active=' + addr :
             'http://blockexplorer.com/q/mytransactions/' + addr;
 
         //url = prompt('Press OK to download transaction history:', url);
@@ -1399,7 +1399,7 @@
         }
 
         try {
-            theTx.signWithMultiSigScript(eckeys, redeem_script.buffer);
+            theTx.signWithMultiSigScript(eckeys, redeem_script);
             var txJSON = TX.toBBE(theTx);
             var buf = theTx.serialize();
             var txHex = Crypto.util.bytesToHex(buf);

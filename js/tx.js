@@ -238,13 +238,10 @@ function tx_parseBCI(data, address) {
         var o = txs[i];
         var lilendHash = o.tx_hash;
 
-        //convert script back to BBE-compatible text
-        var script = dumpScript( new Bitcoin.Script(Crypto.util.hexToBytes(o.script)) );
-
         var value = parseInt(o.value);
         if (!(lilendHash in unspenttxs))
             unspenttxs[lilendHash] = {};
-        unspenttxs[lilendHash][o.tx_output_n] = {amount: value, script: script};
+        unspenttxs[lilendHash][o.tx_output_n] = {amount: value, tx_output_n: o.tx_output_n};
         balance += value;
     }
     return {balance:balance, unspenttxs:unspenttxs};
